@@ -142,6 +142,17 @@
     border:1px solid #475569;
     background:#000;
   }
+  .save-note{
+    margin-top:12px;
+    text-align:center;
+    font-weight:900;
+    font-size:clamp(16px,2.2vw,24px);
+    color:#f8fafc;
+    background:rgba(30,41,59,.9);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    padding:12px 14px;
+  }
   .modal-actions{
     padding:0 20px 20px;
     display:flex;
@@ -190,6 +201,12 @@
     }
     .modal-body{
       padding:10px;
+    }
+    .save-note{
+      margin-top:10px;
+      padding:10px 12px;
+      font-size:16px;
+      border-radius:12px;
     }
     .modal-actions{
       padding:0 10px 10px;
@@ -733,11 +750,24 @@ function fitCanvasToViewport(){
   const availableW = Math.max(320, window.innerWidth - 12);
   const aspect = CH / CW;
 
-  let cssW = Math.min(availableW, 1400);
+  let cssW;
+
+  if(portrait){
+    // スマホ縦向きは今まで通り、横幅いっぱい優先
+    cssW = Math.min(availableW, 1400);
+  }else if(window.innerWidth >= 1200){
+    // PCでは大きすぎないように少し抑える
+    cssW = Math.min(980, availableW);
+  }else if(window.innerWidth >= 900){
+    cssW = Math.min(900, availableW);
+  }else{
+    // タブレット・小さめ横画面
+    cssW = Math.min(availableW, 980);
+  }
+
   let cssH = cssW * aspect;
 
-  // 縦向きスマホでは横幅優先で、下の置き場も十分見えるようにする。
-  // 横向きだけ高さにフィット。
+  // 横向きは高さにも収める
   if(!portrait){
     const maxH = Math.max(420, window.innerHeight - header.offsetHeight - 14);
     if(cssH > maxH){
