@@ -216,7 +216,7 @@
   </header>
 
   <div class="panel">
-<canvas id="gameCanvas" width="1400" height="1260"></canvas>
+<canvas id="gameCanvas" width="1400" height="2300"></canvas>
 </div>
 </div>
 
@@ -243,18 +243,18 @@ const ctx = canvas.getContext("2d");
 const statusEl = document.getElementById("status");
 const overlayEl = document.getElementById("overlay");
 
-const CW = 1400, CH = 1260;
+const CW = 1400, CH = 2300;
 const N = 5;
-const PUZZLE_SIZE = 760;
+const PUZZLE_SIZE = 1140;
 const PW = PUZZLE_SIZE / N;
 const PH = PUZZLE_SIZE / N;
 const KNOB = PW * 0.23;
 const NECK = PW * 0.16;
-const SNAP_DIST = 40;
+const SNAP_DIST = 48;
 
 // invisible "assembled image" top-left
 const HOME_X = (CW - PUZZLE_SIZE) / 2;
-const HOME_Y = 55;
+const HOME_Y = 40;
 
 let edges = [];
 let pieces = [];
@@ -329,24 +329,22 @@ function piecePath(x, y, top, right, bottom, left){
 function createScatterPositions(){
   const pos = [];
 
-  // ピース置き場を下側へ広げ、4段に分けて見やすく配置。
-  const rows = [
-    {count:7, y:865,  startX:100, step:190},
-    {count:6, y:970,  startX:155, step:205},
-    {count:6, y:1070, startX:115, step:210},
-    {count:6, y:1165, startX:155, step:205}
-  ];
+  // 下の置き場を大きく使って、5×5でゆったり配置
+  const startX = 92;
+  const startY = 1298;
+  const stepX = 244;
+  const stepY = 182;
 
-  rows.forEach((row) => {
-    for(let i=0;i<row.count;i++){
-      const jitterX = (Math.random() - 0.5) * 24;
-      const jitterY = (Math.random() - 0.5) * 16;
+  for(let row = 0; row < 5; row++){
+    for(let col = 0; col < 5; col++){
+      const jitterX = (Math.random() - 0.5) * 18;
+      const jitterY = (Math.random() - 0.5) * 14;
       pos.push({
-        x: row.startX + i*row.step + jitterX,
-        y: row.y + jitterY
+        x: startX + col * stepX + jitterX,
+        y: startY + row * stepY + jitterY
       });
     }
-  });
+  }
 
   return pos;
 }
@@ -446,40 +444,40 @@ function drawBackground(){
   // 上部の広い作業スペース
   ctx.save();
   ctx.fillStyle = "rgba(20,30,50,.92)";
-  roundRect(75, 28, 1250, 775, 26);
+  roundRect(20, 18, 1360, 1215, 26);
   ctx.fill();
   ctx.strokeStyle = "rgba(148,163,184,.13)";
   ctx.lineWidth = 2;
-  roundRect(75, 28, 1250, 775, 26);
+  roundRect(20, 18, 1360, 1215, 26);
   ctx.stroke();
   ctx.restore();
 
-  // 作業場中央の薄い光。完成枠のヒントは出さない。
+  // 作業場中央の薄い光。完成形のヒントは出さない。
   ctx.save();
   const rg = ctx.createRadialGradient(
-    HOME_X + PUZZLE_SIZE/2, HOME_Y + PUZZLE_SIZE/2, 120,
-    HOME_X + PUZZLE_SIZE/2, HOME_Y + PUZZLE_SIZE/2, 480
+    HOME_X + PUZZLE_SIZE/2, HOME_Y + PUZZLE_SIZE/2, 140,
+    HOME_X + PUZZLE_SIZE/2, HOME_Y + PUZZLE_SIZE/2, 620
   );
   rg.addColorStop(0, "rgba(56,189,248,.10)");
   rg.addColorStop(1, "rgba(56,189,248,0)");
   ctx.fillStyle = rg;
-  ctx.fillRect(110, 35, 1180, 760);
+  ctx.fillRect(60, 30, 1280, 1180);
   ctx.restore();
 
-  // 下部のピース置き場を大きく確保
+  // 下部のピース置き場を約2倍以上に拡大
   ctx.save();
-  ctx.fillStyle = "rgba(7,14,30,.76)";
-  roundRect(28, 820, 1344, 420, 26);
+  ctx.fillStyle = "rgba(7,14,30,.78)";
+  roundRect(18, 1270, 1364, 1010, 26);
   ctx.fill();
   ctx.strokeStyle = "rgba(148,163,184,.20)";
   ctx.lineWidth = 2;
-  roundRect(28, 820, 1344, 420, 26);
+  roundRect(18, 1270, 1364, 1010, 26);
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(203,213,225,.76)";
+  ctx.fillStyle = "rgba(203,213,225,.78)";
   ctx.font = "800 19px system-ui, sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText("ピース置き場", 52, 850);
+  ctx.fillText("ピース置き場", 42, 1303);
   ctx.restore();
 }
 
@@ -738,8 +736,8 @@ function fitCanvasToViewport(){
   let cssW = Math.min(availableW, 1400);
   let cssH = cssW * aspect;
 
-  // 横向きのみ高さにフィット。縦向きは横幅優先で、
-  // 下のピース置き場まで十分な高さを確保する。
+  // 縦向きスマホでは横幅優先で、下の置き場も十分見えるようにする。
+  // 横向きだけ高さにフィット。
   if(!portrait){
     const maxH = Math.max(420, window.innerHeight - header.offsetHeight - 14);
     if(cssH > maxH){
