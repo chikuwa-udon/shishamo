@@ -216,7 +216,7 @@
   </header>
 
   <div class="panel">
-<canvas id="gameCanvas" width="1400" height="1080"></canvas>
+<canvas id="gameCanvas" width="1400" height="1260"></canvas>
 </div>
 </div>
 
@@ -243,7 +243,7 @@ const ctx = canvas.getContext("2d");
 const statusEl = document.getElementById("status");
 const overlayEl = document.getElementById("overlay");
 
-const CW = 1400, CH = 1080;
+const CW = 1400, CH = 1260;
 const N = 5;
 const PUZZLE_SIZE = 760;
 const PW = PUZZLE_SIZE / N;
@@ -329,17 +329,18 @@ function piecePath(x, y, top, right, bottom, left){
 function createScatterPositions(){
   const pos = [];
 
-  // 全ピースを画面下部へ。少し重ねてランダム感を出す。
+  // ピース置き場を下側へ広げ、4段に分けて見やすく配置。
   const rows = [
-    {count:9, y:850, startX:70,  step:145},
-    {count:8, y:935, startX:130, step:158},
-    {count:8, y:1010,startX:75,  step:160}
+    {count:7, y:865,  startX:100, step:190},
+    {count:6, y:970,  startX:155, step:205},
+    {count:6, y:1070, startX:115, step:210},
+    {count:6, y:1165, startX:155, step:205}
   ];
 
-  rows.forEach((row, rIndex) => {
+  rows.forEach((row) => {
     for(let i=0;i<row.count;i++){
-      const jitterX = (Math.random() - 0.5) * 22;
-      const jitterY = (Math.random() - 0.5) * 18;
+      const jitterX = (Math.random() - 0.5) * 24;
+      const jitterY = (Math.random() - 0.5) * 16;
       pos.push({
         x: row.startX + i*row.step + jitterX,
         y: row.y + jitterY
@@ -442,7 +443,7 @@ function drawBackground(){
   ctx.fillStyle = g;
   ctx.fillRect(0,0,CW,CH);
 
-  // 上部を広い作業スペースとして見せる（完成形の枠は表示しない）
+  // 上部の広い作業スペース
   ctx.save();
   ctx.fillStyle = "rgba(20,30,50,.92)";
   roundRect(75, 28, 1250, 775, 26);
@@ -453,7 +454,7 @@ function drawBackground(){
   ctx.stroke();
   ctx.restore();
 
-  // 作業場中央にごく薄い光だけ。形のヒントになる枠線はなし。
+  // 作業場中央の薄い光。完成枠のヒントは出さない。
   ctx.save();
   const rg = ctx.createRadialGradient(
     HOME_X + PUZZLE_SIZE/2, HOME_Y + PUZZLE_SIZE/2, 120,
@@ -465,20 +466,20 @@ function drawBackground(){
   ctx.fillRect(110, 35, 1180, 760);
   ctx.restore();
 
-  // 下部のピース置き場
+  // 下部のピース置き場を大きく確保
   ctx.save();
-  ctx.fillStyle = "rgba(7,14,30,.72)";
-  roundRect(35, 815, 1330, 245, 24);
+  ctx.fillStyle = "rgba(7,14,30,.76)";
+  roundRect(28, 820, 1344, 420, 26);
   ctx.fill();
-  ctx.strokeStyle = "rgba(148,163,184,.18)";
+  ctx.strokeStyle = "rgba(148,163,184,.20)";
   ctx.lineWidth = 2;
-  roundRect(35, 815, 1330, 245, 24);
+  roundRect(28, 820, 1344, 420, 26);
   ctx.stroke();
 
-  ctx.fillStyle = "rgba(203,213,225,.72)";
+  ctx.fillStyle = "rgba(203,213,225,.76)";
   ctx.font = "800 19px system-ui, sans-serif";
   ctx.textAlign = "left";
-  ctx.fillText("ピース置き場", 58, 842);
+  ctx.fillText("ピース置き場", 52, 850);
   ctx.restore();
 }
 
@@ -734,13 +735,13 @@ function fitCanvasToViewport(){
   const availableW = Math.max(320, window.innerWidth - 12);
   const aspect = CH / CW;
 
-  // 縦向きスマホでは横幅いっぱいを優先して、ピースを大きく見せる。
   let cssW = Math.min(availableW, 1400);
   let cssH = cssW * aspect;
 
-  // 横向きだけ高さに収める。
+  // 横向きのみ高さにフィット。縦向きは横幅優先で、
+  // 下のピース置き場まで十分な高さを確保する。
   if(!portrait){
-    const maxH = Math.max(360, window.innerHeight - header.offsetHeight - 14);
+    const maxH = Math.max(420, window.innerHeight - header.offsetHeight - 14);
     if(cssH > maxH){
       cssH = maxH;
       cssW = cssH / aspect;
