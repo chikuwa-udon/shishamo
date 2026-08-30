@@ -74,6 +74,29 @@ button{appearance:none;border:1px solid #64748b;background:#1e293b;color:#fff;pa
   .modal-body{padding:9px}
   .modal-actions{padding:0 9px 9px}
 }
+
+.video-card{
+  width:min(1000px,96vw);
+  background:#050914;
+  border:1px solid #334155;
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+.video-card video{
+  width:100%;
+  max-height:88vh;
+  display:block;
+  background:#000;
+}
+.video-fallback{
+  display:none;
+  padding:12px;
+  text-align:center;
+  color:#f8fafc;
+  font-weight:700;
+}
+
 </style>
 </head>
 <body>
@@ -92,6 +115,16 @@ button{appearance:none;border:1px solid #64748b;background:#1e293b;color:#fff;pa
         <div class="tray"></div>
         <div class="tray-label">ピース置き場</div>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="videoOverlay">
+  <div class="video-card">
+    <video id="finishVideo" src="finish.mp4" playsinline preload="metadata"></video>
+    <div class="video-fallback" id="videoFallback">
+      動画を再生するには画面をタップしてください。
     </div>
   </div>
 </div>
@@ -137,6 +170,9 @@ const SNAP_DIST = 55;
 const stage = document.getElementById("stage");
 const shell = document.getElementById("stageShell");
 const statusEl = document.getElementById("status");
+const videoOverlay = document.getElementById("videoOverlay");
+const finishVideo = document.getElementById("finishVideo");
+const videoFallback = document.getElementById("videoFallback");
 const completeOverlay = document.getElementById("completeOverlay");
 const saveConfirmOverlay = document.getElementById("saveConfirmOverlay");
 
@@ -308,14 +344,42 @@ stage.addEventListener("pointercancel",dragEnd);
 function finishPuzzle(){
   if(solved) return;
   solved=true;
-  // Align the completed group to the intended display location.
+
+  // 完成したピース群を本来の位置へ揃える
   const anchor=pieces.find(p=>p.row===0&&p.col===0);
   if(anchor){
     const dx=HOME_X-anchor.x, dy=HOME_Y-anchor.y;
     moveGroup(anchor.groupId,dx,dy);
   }
   updateStatus();
-  setTimeout(()=>completeOverlay.classList.add("show"),220);
+
+  // パズル完成 → 動画再生 → 元画像表示
+  setTimeout(playFinishVideo, 180);
+}
+
+function showCompletedImage(){
+  videoOverlay.classList.remove("show");
+  try{
+    finishVideo.pause();
+    finishVideo.currentTime = 0;
+  }catch(_){}
+  completeOverlay.classList.add("show");
+}
+
+async function playFinishVideo(){
+  completeOverlay.classList.remove("show");
+  videoOverlay.classList.add("show");
+  videoFallback.style.display = "none";
+
+  try{
+    finishVideo.currentTime = 0;
+    finishVideo.muted = false;
+    const p = finishVideo.play();
+    if(p) await p;
+  }catch(err){
+    // 自動再生を止めるブラウザでは、画面タップで再生
+    videoFallback.style.display = "block";
+  }
 }
 
 function forceComplete(){
@@ -332,6 +396,8 @@ function forceComplete(){
 
 function initPuzzle(){
   solved=false; drag=null;
+  videoOverlay.classList.remove("show");
+  try{ finishVideo.pause(); finishVideo.currentTime = 0; }catch(_){}
   completeOverlay.classList.remove("show");
   saveConfirmOverlay.classList.remove("show");
   for(const old of [...stage.querySelectorAll(".piece")]) old.remove();
@@ -391,6 +457,18 @@ async function saveImage(){
     setTimeout(()=>URL.revokeObjectURL(url),1500);
   }catch(err){ if(err?.name!=="AbortError") window.open(IMG_SRC,"_blank"); }
 }
+
+
+finishVideo.addEventListener("ended", showCompletedImage);
+
+videoOverlay.addEventListener("click", async () => {
+  if(!finishVideo.paused) return;
+  try{
+    finishVideo.muted = false;
+    await finishVideo.play();
+    videoFallback.style.display = "none";
+  }catch(_){}
+});
 
 document.getElementById("restartBtn").onclick=initPuzzle;
 document.getElementById("saveImageBtn").onclick=saveImage;
